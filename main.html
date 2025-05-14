@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube Dual Player Mixer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+    }
+    .player-container {
+      width: 600px;
+    }
+    .address-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 5px;
+      margin-right: 5px;
+    }
+    .title-display {
+      width: 200px;
+      padding: 5px;
+      margin-right: 5px;
+    }
+    iframe {
+      width: 100%;
+      height: 315px;
+    }
+    .volume-control {
+      margin: 20px;
+    }
+    #search-container {
+      margin-bottom: 20px;
+    }
+    #search-results {
+      margin: 20px 0;
+      text-align: left;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .result {
+      margin-bottom: 10px;
+    }
+    .result-buttons {
+      display: none;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="search-container">
+    <input type="text" id="search-bar" placeholder="Search YouTube" />
+    <button onclick="searchYouTube()">Search</button>
+  </div>
+
+  <div id="search-results"></div>
+
+  <div class="container">
+    <!-- Player 1 -->
+    <div class="player-container">
+      <div class="address-bar">
+        <input type="text" id="url1-1" placeholder="URL 1"/>
+        <button onclick="resolveUrl(1, 1)">Go</button>
+        <input type="text" id="title1-1" class="title-display" disabled/>
+        <button onclick="loadVideo(1, 1)">Load</button>
+      </div>
+      <div class="address-bar">
+        <input type="text" id="url1-2" placeholder="URL 2"/>
+        <button onclick="resolveUrl(1, 2)">Go</button>
+        <input type="text" id="title1-2" class="title-display" disabled/>
+        <button onclick="loadVideo(1, 2)">Load</button>
+      </div>
+      <div class="address-bar">
+        <input type="text" id="url1-3" placeholder="URL 3"/>
+        <button onclick="resolveUrl(1, 3)">Go</button>
+        <input type="text" id="title1-3" class="title-display" disabled/>
+        <button onclick="loadVideo(1, 3)">Load</button>
+      </div>
+      <div id="player1"></div>
+    </div>
+
+    <!-- Volume Crossfader -->
+    <div class="volume-control">
+      <label for="volume">Audio Crossfader</label><br/>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5"/>
+    </div>
+
+    <!-- Player 2 -->
+    <div class="player-container">
+      <div class="address-bar">
+        <input type="text" id="url2-1" placeholder="URL 1"/>
+        <button onclick="resolveUrl(2, 1)">Go</button>
+        <input type="text" id="title2-1" class="title-display" disabled/>
+        <button onclick="loadVideo(2, 1)">Load</button>
+      </div>
+      <div class="address-bar">
+        <input type="text" id="url2-2" placeholder="URL 2"/>
+        <button onclick="resolveUrl(2, 2)">Go</button>
+        <input type="text" id="title2-2" class="title-display" disabled/>
+        <button onclick="loadVideo(2, 2)">Load</button>
+      </div>
+      <div class="address-bar">
+        <input type="text" id="url2-3" placeholder="URL 3"/>
+        <button onclick="resolveUrl(2, 3)">Go</button>
+        <input type="text" id="title2-3" class="title-display" disabled/>
+        <button onclick="loadVideo(2, 3)">Load</button>
+      </div>
+      <div id="player2"></div>
+    </div>
+  </div>
+
+  <script>
+    let player1, player2;
+    const apiKey = 'AIzaSyBBMVXieMK017klojTWlVnu9hIX3nRrUXo'; // Replace with your API key
+
+    function onYouTubeIframeAPIReady() {
+      player1 = new YT.Player("player1", { videoId: "" });
+      player2 = new YT.Player("player2", { videoId: "" });
+    }
+
+    function getYouTubeVideoId(url) {
+      const regex = /(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    async function resolveUrl(player, index) {
+      const url = document.getElementById(`url${player}-${index}`).value;
+      const videoId = getYouTubeVideoId(url);
+      if (!videoId) return alert("Invalid URL");
+
+      const title = await fetchVideoTitle(videoId);
+      document.getElementById(`title${player}-${index}`).value = title;
+    }
+
+    async function fetchVideoTitle(videoId) {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
+      const data = await res.json();
+      return data.items?.[0]?.snippet?.title || "Unknown Title";
+    }
+
+    function loadVideo(player, index) {
+      const url = document.getElementById(`url${player}-${index}`).value;
+      const videoId = getYouTubeVideoId(url);
+      if (!videoId) return alert("Invalid URL");
+
+      if (player === 1) player1.loadVideoById(videoId);
+      else player2.loadVideoById(videoId);
+    }
+
+    document.getElementById("volume").addEventListener("input", function () {
+      const v = parseFloat(this.value);
+      if (player1 && player2) {
+        player1.setVolume((1 - v) * 100);
+        player2.setVolume(v * 100);
+      }
+    });
+
+    function searchYouTube() {
+      const query = document.getElementById("search-bar").value;
+      if (!query) return;
+
+      fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(query)}&key=${apiKey}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById("search-results");
+          container.innerHTML = "";
+
+          data.items.forEach((item, idx) => {
+            const videoId = item.id.videoId;
+            const title = item.snippet.title;
+
+            const div = document.createElement("div");
+            div.className = "result";
+            div.innerHTML = `
+              <strong>${title}</strong>
+              <button onclick="showButtons(${idx})">Select</button>
+              <div id="buttons-${idx}" class="result-buttons">
+                ${["P1-1", "P1-2", "P1-3", "P2-1", "P2-2", "P2-3"].map(id => `
+                  <button onclick="assignTo('${id}', '${videoId}')">${id}</button>
+                `).join("")}
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        });
+    }
+
+    function showButtons(idx) {
+      document.getElementById(`buttons-${idx}`).style.display = "block";
+    }
+
+    function assignTo(buttonId, videoId) {
+      const inputMap = {
+        "P1-1": "url1-1",
+        "P1-2": "url1-2",
+        "P1-3": "url1-3",
+        "P2-1": "url2-1",
+        "P2-2": "url2-2",
+        "P2-3": "url2-3"
+      };
+      const inputId = inputMap[buttonId];
+      document.getElementById(inputId).value = `https://www.youtube.com/watch?v=${videoId}`;
+    }
+
+    // Load YouTube IFrame API
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  </script>
+</body>
+</html>
