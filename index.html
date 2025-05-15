@@ -8,7 +8,8 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      background: #f0f0f0;
+      background: black;
+      color: white;
       text-align: center;
     }
     .container {
@@ -32,10 +33,22 @@
       padding: 5px;
       font-size: 14px;
       text-align: center;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 3px;
     }
     button.load-btn {
       padding: 5px 10px;
       cursor: pointer;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      transition: background-color 0.3s;
+    }
+    button.load-btn:hover {
+      background-color: #666;
     }
     .select-box {
       width: 20px;
@@ -45,6 +58,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
       border: 1px solid transparent;
+      flex-shrink: 0;
     }
     .select-box.visible {
       opacity: 1;
@@ -74,28 +88,47 @@
       width: 300px;
       padding: 6px 8px;
       font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #555;
+      background-color: #222;
+      color: white;
+    }
+    #search-bar::placeholder {
+      color: #999;
     }
     #search-results {
       max-width: 900px;
       margin: 0 auto 30px auto;
       text-align: left;
+      background-color: #111;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px #000;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
     }
     .result-item {
       display: flex;
       align-items: center;
       gap: 15px;
-      margin-bottom: 15px;
-      background: white;
+      background: #222;
       padding: 10px;
       border-radius: 5px;
+      width: 100%;
+      max-width: 850px;
+      box-sizing: border-box;
     }
     .result-item img {
-      width: 120px;
+      width: 80px; /* 33% smaller from 120 */
       border-radius: 4px;
+      flex-shrink: 0;
     }
     .result-info {
       flex-grow: 1;
       font-size: 14px;
+      color: white;
     }
     .result-info strong {
       display: block;
@@ -110,6 +143,11 @@
       color: white;
       border-radius: 4px;
       user-select: none;
+      flex-shrink: 0;
+      transition: background-color 0.3s;
+    }
+    .result-select-btn:hover {
+      background-color: #1769aa;
     }
     .crossfader-container {
       display: flex;
@@ -119,6 +157,7 @@
       gap: 10px;
       margin-top: 30px;
       margin-bottom: 30px;
+      color: white;
     }
     #crossfader {
       width: 300px;
@@ -349,11 +388,10 @@
       slotSelectionActive = true;
       selectedSlotId = null;
 
-      // Show all boxes that are not red (playing audible)
       const allSlots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
       allSlots.forEach(slot => {
         const box = document.getElementById(`box-${slot}`);
-        // Only enable pointer if not red
+        // Only enable pointer if not red (playing audible)
         if (box.classList.contains("red")) {
           box.style.pointerEvents = "none";
           box.style.opacity = "0.5";
@@ -361,95 +399,52 @@
           box.style.pointerEvents = "auto";
           box.style.opacity = "1";
         }
-        box.classList.add("visible");
       });
 
-      // Add a document click listener to cancel if clicked outside boxes
-      document.addEventListener('click', cancelSelectionOnClickOutside);
+      // Add click listeners to boxes for assigning video
+      allSlots.forEach(slot => {
+        const box = document.getElementById(`box-${slot}`);
+        box.onclick = () => {
+          if (box.classList.contains("red")) return; // ignore red slots
+
+          assignedVideos[slot] = selectedVideoId;
+          // Update title input for that slot
+          const playerNum = slot[1];
+          const slotNum = slot[3];
+          const titleInput = document.getElementById(`title${playerNum}-${slotNum}`);
+          titleInput.value = selectedVideoTitle;
+
+          slotSelectionActive = false;
+          clearSlotSelectors();
+          updateSlotColors();
+        };
+      });
     }
 
-    // Hide all slot selectors and clear selection mode
-    function hideSlotSelectors() {
-      slotSelectionActive = false;
-      selectedVideoId = null;
-      selectedVideoTitle = null;
-      selectedSlotId = null;
-
+    // Clear all slot selectors (hide and remove onclick)
+    function clearSlotSelectors() {
       const allSlots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
       allSlots.forEach(slot => {
         const box = document.getElementById(`box-${slot}`);
-        box.classList.remove("visible");
-        box.style.pointerEvents = "none";
         box.style.opacity = "0";
-      });
-
-      document.removeEventListener('click', cancelSelectionOnClickOutside);
-      updateSlotColors();
-    }
-
-    // Handle slot box click: assign selected video if allowed
-    function onSlotBoxClick(event) {
-      event.stopPropagation();
-      if (!slotSelectionActive || !selectedVideoId) return;
-
-      const slotId = event.target.id.replace("box-", "");
-      const box = event.target;
-
-      if (box.classList.contains("red")) {
-        // No assigning on red slots
-        return;
-      }
-
-      // Assign selected video to slot
-      assignedVideos[slotId] = selectedVideoId;
-
-      // Update title display for that slot
-      const playerNum = slotId[1];
-      const slotNum = slotId[3];
-      const titleInput = document.getElementById(`title${playerNum}-${slotNum}`);
-      if (titleInput) {
-        titleInput.value = selectedVideoTitle || "Selected Video";
-      }
-
-      hideSlotSelectors();
-    }
-
-    // Cancel assignment if clicking outside slot boxes
-    function cancelSelectionOnClickOutside(event) {
-      const target = event.target;
-      if (!target.classList.contains('select-box') && !target.classList.contains('result-select-btn')) {
-        hideSlotSelectors();
-      }
-    }
-
-    // Attach event listeners to all slot boxes for selection
-    function attachSlotBoxListeners() {
-      const allSlots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
-      allSlots.forEach(slot => {
-        const box = document.getElementById(`box-${slot}`);
-        box.addEventListener("click", onSlotBoxClick);
+        box.style.pointerEvents = "none";
+        box.onclick = null;
       });
     }
 
-    // Crossfader input handler to adjust volumes and colors
-    function onCrossfaderChange() {
+    // Crossfader event to mute/unmute players
+    document.getElementById("crossfader").addEventListener("input", () => {
       const val = parseFloat(document.getElementById("crossfader").value);
-      if (!player1 || !player2) return;
 
-      // player1 volume: fade out as val goes from 0 to 1
-      player1.setVolume(100 * (1 - val));
-      // player2 volume: fade in as val goes from 0 to 1
-      player2.setVolume(100 * val);
-
+      if (player1 && player2) {
+        // Player1 volume: (1 - val)*100
+        player1.setVolume(Math.round((1 - val) * 100));
+        // Player2 volume: val*100
+        player2.setVolume(Math.round(val * 100));
+      }
       updateSlotColors();
-    }
-
-    // Initialize all
-    window.onload = () => {
-      attachSlotBoxListeners();
-      document.getElementById("crossfader").addEventListener("input", onCrossfaderChange);
-      updateSlotColors();
-    };
+    });
   </script>
+
 </body>
 </html>
