@@ -2,227 +2,454 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>YouTube Dual Player Mixer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
+      margin: 20px;
+      background: #f0f0f0;
       text-align: center;
     }
     .container {
       display: flex;
       justify-content: center;
-      align-items: flex-start;
       gap: 40px;
+      margin-top: 20px;
     }
-    .player-container {
+    .player-section {
       width: 600px;
     }
     .address-bar {
       display: flex;
+      justify-content: center;
       align-items: center;
-      margin-bottom: 10px;
-    }
-    input[type="text"] {
-      width: 300px;
-      padding: 5px;
-      margin-right: 5px;
+      gap: 10px;
+      margin-bottom: 8px;
     }
     .title-display {
-      width: 200px;
+      width: 300px;
       padding: 5px;
-      margin-right: 5px;
+      font-size: 14px;
+      text-align: center;
+    }
+    button.load-btn {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .select-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border: 1px solid transparent;
+    }
+    .select-box.visible {
+      opacity: 1;
+    }
+    .green {
+      background-color: #4caf50;
+      border-color: #388e3c;
+    }
+    .red {
+      background-color: #f44336;
+      border-color: #d32f2f;
+    }
+    .yellow {
+      background-color: #ffeb3b;
+      border-color: #fbc02d;
     }
     iframe {
       width: 100%;
       height: 315px;
-    }
-    .volume-control {
-      margin: 20px;
+      border: none;
+      background: black;
     }
     #search-container {
       margin-bottom: 20px;
     }
+    #search-bar {
+      width: 300px;
+      padding: 6px 8px;
+      font-size: 16px;
+    }
     #search-results {
-      margin: 20px 0;
-      text-align: left;
       max-width: 900px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 0 auto 30px auto;
+      text-align: left;
     }
-    .result {
-      margin-bottom: 10px;
+    .result-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
     }
-    .result-buttons {
-      display: none;
-      margin-top: 5px;
+    .result-item img {
+      width: 120px;
+      border-radius: 4px;
+    }
+    .result-info {
+      flex-grow: 1;
+      font-size: 14px;
+    }
+    .result-info strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .result-select-btn {
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      background-color: #2196f3;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      user-select: none;
+    }
+    .crossfader-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    #crossfader {
+      width: 300px;
+    }
+    label {
+      font-weight: bold;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
   <div id="search-container">
-    <input type="text" id="search-bar" placeholder="Search YouTube" />
+    <input type="text" id="search-bar" placeholder="Search YouTube videos" />
     <button onclick="searchYouTube()">Search</button>
   </div>
-
   <div id="search-results"></div>
 
   <div class="container">
-    <!-- Player 1 -->
-    <div class="player-container">
+    <div class="player-section" id="player1-section">
       <div class="address-bar">
-        <input type="text" id="url1-1" placeholder="URL 1"/>
-        <button onclick="resolveUrl(1, 1)">Go</button>
-        <input type="text" id="title1-1" class="title-display" disabled/>
-        <button onclick="loadVideo(1, 1)">Load</button>
+        <input type="text" id="title1-1" class="title-display" disabled placeholder="Slot 1"/>
+        <button class="load-btn" onclick="loadVideo(1, 1)">Load</button>
+        <div id="box-P1-1" class="select-box green"></div>
       </div>
       <div class="address-bar">
-        <input type="text" id="url1-2" placeholder="URL 2"/>
-        <button onclick="resolveUrl(1, 2)">Go</button>
-        <input type="text" id="title1-2" class="title-display" disabled/>
-        <button onclick="loadVideo(1, 2)">Load</button>
+        <input type="text" id="title1-2" class="title-display" disabled placeholder="Slot 2"/>
+        <button class="load-btn" onclick="loadVideo(1, 2)">Load</button>
+        <div id="box-P1-2" class="select-box green"></div>
       </div>
       <div class="address-bar">
-        <input type="text" id="url1-3" placeholder="URL 3"/>
-        <button onclick="resolveUrl(1, 3)">Go</button>
-        <input type="text" id="title1-3" class="title-display" disabled/>
-        <button onclick="loadVideo(1, 3)">Load</button>
+        <input type="text" id="title1-3" class="title-display" disabled placeholder="Slot 3"/>
+        <button class="load-btn" onclick="loadVideo(1, 3)">Load</button>
+        <div id="box-P1-3" class="select-box green"></div>
       </div>
       <div id="player1"></div>
     </div>
 
-    <!-- Volume Crossfader -->
-    <div class="volume-control">
-      <label for="volume">Audio Crossfader</label><br/>
-      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5"/>
+    <div class="crossfader-container">
+      <label for="crossfader">Audio Crossfader</label>
+      <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5" />
     </div>
 
-    <!-- Player 2 -->
-    <div class="player-container">
+    <div class="player-section" id="player2-section">
       <div class="address-bar">
-        <input type="text" id="url2-1" placeholder="URL 1"/>
-        <button onclick="resolveUrl(2, 1)">Go</button>
-        <input type="text" id="title2-1" class="title-display" disabled/>
-        <button onclick="loadVideo(2, 1)">Load</button>
+        <input type="text" id="title2-1" class="title-display" disabled placeholder="Slot 1"/>
+        <button class="load-btn" onclick="loadVideo(2, 1)">Load</button>
+        <div id="box-P2-1" class="select-box green"></div>
       </div>
       <div class="address-bar">
-        <input type="text" id="url2-2" placeholder="URL 2"/>
-        <button onclick="resolveUrl(2, 2)">Go</button>
-        <input type="text" id="title2-2" class="title-display" disabled/>
-        <button onclick="loadVideo(2, 2)">Load</button>
+        <input type="text" id="title2-2" class="title-display" disabled placeholder="Slot 2"/>
+        <button class="load-btn" onclick="loadVideo(2, 2)">Load</button>
+        <div id="box-P2-2" class="select-box green"></div>
       </div>
       <div class="address-bar">
-        <input type="text" id="url2-3" placeholder="URL 3"/>
-        <button onclick="resolveUrl(2, 3)">Go</button>
-        <input type="text" id="title2-3" class="title-display" disabled/>
-        <button onclick="loadVideo(2, 3)">Load</button>
+        <input type="text" id="title2-3" class="title-display" disabled placeholder="Slot 3"/>
+        <button class="load-btn" onclick="loadVideo(2, 3)">Load</button>
+        <div id="box-P2-3" class="select-box green"></div>
       </div>
       <div id="player2"></div>
     </div>
   </div>
 
   <script>
+    // Replace with your own YouTube API key
+    const apiKey = "AIzaSyBBMVXieMK017klojTWlVnu9hIX3nRrUXo";
+
     let player1, player2;
-    const apiKey = 'AIzaSyBBMVXieMK017klojTWlVnu9hIX3nRrUXo'; // Replace with your API key
+    let selectedVideoId = null;
+    let selectedVideoTitle = null;
+    let slotSelectionActive = false;
+    let selectedSlotId = null;
+
+    // Map of slotId => videoId assigned
+    const assignedVideos = {};
+
+    // Load YouTube iframe API
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
 
     function onYouTubeIframeAPIReady() {
-      player1 = new YT.Player("player1", { videoId: "" });
-      player2 = new YT.Player("player2", { videoId: "" });
+      player1 = new YT.Player('player1', {
+        height: '315',
+        width: '600',
+        videoId: '',
+        events: { onStateChange: onPlayerStateChange }
+      });
+      player2 = new YT.Player('player2', {
+        height: '315',
+        width: '600',
+        videoId: '',
+        events: { onStateChange: onPlayerStateChange }
+      });
     }
 
-    function getYouTubeVideoId(url) {
-      const regex = /(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-      const match = url.match(regex);
-      return match ? match[1] : null;
+    // Player state changes trigger slot color updates
+    function onPlayerStateChange(event) {
+      updateSlotColors();
     }
 
-    async function resolveUrl(player, index) {
-      const url = document.getElementById(`url${player}-${index}`).value;
-      const videoId = getYouTubeVideoId(url);
-      if (!videoId) return alert("Invalid URL");
+    // Update colors for all slots
+    function updateSlotColors() {
+      const slots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
+      const crossfaderVal = parseFloat(document.getElementById("crossfader").value);
 
-      const title = await fetchVideoTitle(videoId);
-      document.getElementById(`title${player}-${index}`).value = title;
+      slots.forEach(slot => {
+        const box = document.getElementById(`box-${slot}`);
+        const assignedVideo = assignedVideos[slot];
+        const playerNum = parseInt(slot[1]);
+        const slotNum = parseInt(slot[3]);
+
+        if (!assignedVideo) {
+          box.className = "select-box green";
+          if (slotSelectionActive) {
+            box.style.opacity = "1";
+            box.style.pointerEvents = "auto";
+          } else {
+            box.style.opacity = "0";
+            box.style.pointerEvents = "none";
+          }
+          return;
+        }
+
+        // Determine if video is currently playing on respective player
+        const player = playerNum === 1 ? player1 : player2;
+        if (!player || !player.getPlayerState) {
+          box.className = "select-box green";
+          box.style.opacity = slotSelectionActive ? "1" : "0";
+          box.style.pointerEvents = slotSelectionActive ? "auto" : "none";
+          return;
+        }
+
+        const currentVideoId = player.getVideoData().video_id;
+        const state = player.getPlayerState();
+
+        if (currentVideoId === assignedVideo) {
+          // Determine muted by crossfader:
+          let mutedByCrossfader = false;
+          if (playerNum === 1 && crossfaderVal >= 0.95) mutedByCrossfader = true;
+          if (playerNum === 2 && crossfaderVal <= 0.05) mutedByCrossfader = true;
+
+          if (state === YT.PlayerState.PLAYING) {
+            box.className = mutedByCrossfader ? "select-box yellow" : "select-box red";
+          } else if (state === YT.PlayerState.PAUSED) {
+            box.className = "select-box yellow";
+          } else {
+            box.className = "select-box green";
+          }
+        } else {
+          box.className = "select-box green";
+        }
+
+        if (slotSelectionActive) {
+          box.style.opacity = "1";
+          box.style.pointerEvents = box.classList.contains("red") ? "none" : "auto";
+          box.style.opacity = box.classList.contains("red") ? "0.5" : "1";
+        } else {
+          box.style.opacity = "0";
+          box.style.pointerEvents = "none";
+        }
+      });
     }
 
-    async function fetchVideoTitle(videoId) {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
-      const data = await res.json();
-      return data.items?.[0]?.snippet?.title || "Unknown Title";
-    }
-
-    function loadVideo(player, index) {
-      const url = document.getElementById(`url${player}-${index}`).value;
-      const videoId = getYouTubeVideoId(url);
-      if (!videoId) return alert("Invalid URL");
-
-      if (player === 1) player1.loadVideoById(videoId);
-      else player2.loadVideoById(videoId);
-    }
-
-    document.getElementById("volume").addEventListener("input", function () {
-      const v = parseFloat(this.value);
-      if (player1 && player2) {
-        player1.setVolume((1 - v) * 100);
-        player2.setVolume(v * 100);
+    // Load assigned video into player on Load button click
+    function loadVideo(playerNum, slotNum) {
+      const slotKey = `P${playerNum}-${slotNum}`;
+      const videoId = assignedVideos[slotKey];
+      if (!videoId) {
+        alert("No video assigned to this slot.");
+        return;
       }
-    });
+      const player = playerNum === 1 ? player1 : player2;
+      if (!player) return;
 
+      player.loadVideoById(videoId);
+      updateSlotColors();
+    }
+
+    // Search YouTube videos and display results with select buttons
     function searchYouTube() {
-      const query = document.getElementById("search-bar").value;
-      if (!query) return;
+      const query = document.getElementById("search-bar").value.trim();
+      if (!query) return alert("Please enter a search term.");
 
       fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(query)}&key=${apiKey}`)
-        .then(res => res.json())
+        .then(response => response.json())
         .then(data => {
-          const container = document.getElementById("search-results");
-          container.innerHTML = "";
+          const resultsDiv = document.getElementById("search-results");
+          resultsDiv.innerHTML = "";
 
-          data.items.forEach((item, idx) => {
+          if (!data.items || data.items.length === 0) {
+            resultsDiv.innerHTML = "<p>No results found.</p>";
+            return;
+          }
+
+          data.items.forEach(item => {
             const videoId = item.id.videoId;
             const title = item.snippet.title;
+            const thumbnail = item.snippet.thumbnails.medium.url;
 
-            const div = document.createElement("div");
-            div.className = "result";
-            div.innerHTML = `
-              <strong>${title}</strong>
-              <button onclick="showButtons(${idx})">Select</button>
-              <div id="buttons-${idx}" class="result-buttons">
-                ${["P1-1", "P1-2", "P1-3", "P2-1", "P2-2", "P2-3"].map(id => `
-                  <button onclick="assignTo('${id}', '${videoId}')">${id}</button>
-                `).join("")}
+            const resultItem = document.createElement("div");
+            resultItem.className = "result-item";
+
+            resultItem.innerHTML = `
+              <img src="${thumbnail}" alt="Thumbnail" />
+              <div class="result-info">
+                <strong>${title}</strong>
+                <button class="result-select-btn">Select</button>
               </div>
             `;
-            container.appendChild(div);
+
+            resultItem.querySelector("button").addEventListener("click", () => {
+              selectedVideoId = videoId;
+              selectedVideoTitle = title;
+              showSlotSelectors();
+            });
+
+            resultsDiv.appendChild(resultItem);
           });
+        })
+        .catch(err => {
+          alert("Error searching YouTube API: " + err.message);
         });
     }
 
-    function showButtons(idx) {
-      document.getElementById(`buttons-${idx}`).style.display = "block";
+    // Show small colored boxes on all slots to assign selected video
+    function showSlotSelectors() {
+      slotSelectionActive = true;
+      selectedSlotId = null;
+
+      // Show all boxes that are not red (playing audible)
+      const allSlots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
+      allSlots.forEach(slot => {
+        const box = document.getElementById(`box-${slot}`);
+        // Only enable pointer if not red
+        if (box.classList.contains("red")) {
+          box.style.pointerEvents = "none";
+          box.style.opacity = "0.5";
+        } else {
+          box.style.pointerEvents = "auto";
+          box.style.opacity = "1";
+        }
+        box.classList.add("visible");
+      });
+
+      // Add a document click listener to cancel if clicked outside boxes
+      document.addEventListener('click', cancelSelectionOnClickOutside);
     }
 
-    function assignTo(buttonId, videoId) {
-      const inputMap = {
-        "P1-1": "url1-1",
-        "P1-2": "url1-2",
-        "P1-3": "url1-3",
-        "P2-1": "url2-1",
-        "P2-2": "url2-2",
-        "P2-3": "url2-3"
-      };
-      const inputId = inputMap[buttonId];
-      document.getElementById(inputId).value = `https://www.youtube.com/watch?v=${videoId}`;
+    // Hide all slot selectors and clear selection mode
+    function hideSlotSelectors() {
+      slotSelectionActive = false;
+      selectedVideoId = null;
+      selectedVideoTitle = null;
+      selectedSlotId = null;
+
+      const allSlots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
+      allSlots.forEach(slot => {
+        const box = document.getElementById(`box-${slot}`);
+        box.classList.remove("visible");
+        box.style.pointerEvents = "none";
+        box.style.opacity = "0";
+      });
+
+      document.removeEventListener('click', cancelSelectionOnClickOutside);
+      updateSlotColors();
     }
 
-    // Load YouTube IFrame API
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(tag);
+    // Handle slot box click: assign selected video if allowed
+    function onSlotBoxClick(event) {
+      event.stopPropagation();
+      if (!slotSelectionActive || !selectedVideoId) return;
+
+      const slotId = event.target.id.replace("box-", "");
+      const box = event.target;
+
+      if (box.classList.contains("red")) {
+        // No assigning on red slots
+        return;
+      }
+
+      // Assign selected video to slot
+      assignedVideos[slotId] = selectedVideoId;
+
+      // Update title display for that slot
+      const playerNum = slotId[1];
+      const slotNum = slotId[3];
+      const titleInput = document.getElementById(`title${playerNum}-${slotNum}`);
+      if (titleInput) {
+        titleInput.value = selectedVideoTitle || "Selected Video";
+      }
+
+      hideSlotSelectors();
+    }
+
+    // Cancel assignment if clicking outside slot boxes
+    function cancelSelectionOnClickOutside(event) {
+      const target = event.target;
+      if (!target.classList.contains('select-box') && !target.classList.contains('result-select-btn')) {
+        hideSlotSelectors();
+      }
+    }
+
+    // Attach event listeners to all slot boxes for selection
+    function attachSlotBoxListeners() {
+      const allSlots = ["P1-1","P1-2","P1-3","P2-1","P2-2","P2-3"];
+      allSlots.forEach(slot => {
+        const box = document.getElementById(`box-${slot}`);
+        box.addEventListener("click", onSlotBoxClick);
+      });
+    }
+
+    // Crossfader input handler to adjust volumes and colors
+    function onCrossfaderChange() {
+      const val = parseFloat(document.getElementById("crossfader").value);
+      if (!player1 || !player2) return;
+
+      // player1 volume: fade out as val goes from 0 to 1
+      player1.setVolume(100 * (1 - val));
+      // player2 volume: fade in as val goes from 0 to 1
+      player2.setVolume(100 * val);
+
+      updateSlotColors();
+    }
+
+    // Initialize all
+    window.onload = () => {
+      attachSlotBoxListeners();
+      document.getElementById("crossfader").addEventListener("input", onCrossfaderChange);
+      updateSlotColors();
+    };
   </script>
 </body>
 </html>
